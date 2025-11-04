@@ -116,7 +116,7 @@ if __name__ == "__main__":
     dem_path = project_root / "data" / "dem" / "merged_dem_sib_N54_N59_E090_E100.tif"
 
     dem = DEMLoader(dem_path)
-    print(f"\n  DEM loaded: {dem.path.name}")
+    print(f"✓ DEM loaded: {dem.path.name}")
     print(f"  Shape: {dem.shape}")
     print(f"  Bounds: {dem.bounds}")
 
@@ -139,7 +139,7 @@ if __name__ == "__main__":
             dem_data[dem_data == nodata] = np.nan
 
     # Handle downsampling
-    downsample_size = 5
+    downsample_size = 10
     dem_downsampled = dem_data[::downsample_size, ::downsample_size]
 
     # Print console
@@ -173,5 +173,7 @@ if __name__ == "__main__":
     plt.ylabel('Latitude (degrees)', fontsize=12)
     plt.gca().invert_yaxis()  # having north on top (traditional map layout)
     plt.tight_layout()
-    print('\nPlot generating')
     plt.show()
+
+    print('\nPlot generated')
+
