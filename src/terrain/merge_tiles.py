@@ -6,7 +6,7 @@ from pathlib import Path
 script_dir = Path(__file__).resolve().parent
 project_root = script_dir.parents[1]
 data_dir = project_root / "data" / "dem" / "siberia_unmerged"
-# list of tif files to merge
+# list of tif files to merge {place your tif files in dem folder, and add their filename in tif_files list}
 tif_files = [
   # N59 Row
   "N59E090.tif", "N59E091.tif", "N59E092.tif", "N59E093.tif", "N59E094.tif", "N59E095.tif", "N59E096.tif", "N59E097.tif", "N59E098.tif", "N59E099.tif", "N59E100.tif",
@@ -48,7 +48,7 @@ out_meta.update({
     "transform": merged_transform
 })
 
-# save merged file
+# save merged file {modify the desired filename}
 output_path = data_dir / "merged_dem_sib_N59_E090_E099.tif"
 with rasterio.open(output_path, "w", **out_meta) as dest:
     dest.write(merged_array)

@@ -1,10 +1,12 @@
 # src/terrain/dem_loader.py
-from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.colors import LinearSegmentedColormap, LightSource
 import rasterio
+
+from pathlib import Path
 from rasterio.transform import rowcol, xy
+from matplotlib.colors import LinearSegmentedColormap, LightSource
+
 
 
 class DEMLoader:
@@ -28,7 +30,7 @@ class DEMLoader:
             raise FileNotFoundError(f"DEM file not found: {self.path}. Check again.")
 
         # Load DEM data
-        with rasterio.open(self.path) as src: # path will be provided by user
+        with rasterio.open(self.path) as src: # path will be provided by the user
             self.data = src.read(1)
             self.transform = src.transform # row, col <-> gps
             self.crs = src.crs
@@ -37,7 +39,7 @@ class DEMLoader:
             self.nodata = src.nodata # invalid data (pixel)
 
 
-    def get_elevation(self, lat, lon):
+    def get_elevation(self, lat: float, lon: float) -> float | None:
         """
         Get elevation at GPS coordinates.
 
@@ -58,49 +60,65 @@ class DEMLoader:
     
         except Exception:
             return None
-    
-            
-    
 
-    # def get_elevation_patch(self, lat, lon, patch_size=7):
-    #     """
-    #     Extract terrain patch around coordinates (for TERCOM).
 
-    #     Args:
-    #         lat, lon: Center coordinates
-    #         patch_size: Patch will be (patch_size × patch_size)
+    def get_elevation_patch(self, lat: float, lon: float, patch_size=7) -> np.ndarray[float]:
+        """
+        Getting a 7 x 7 patch around the centre coordinate (where the missile is located at).
+        The patch will later be passed down for TERCOM navigation using Kalman filter.
+        The patch will also be normalised. As we do not want a direct elevation comparison, rather a pattern and shape
+        (simulates real-life).
 
-    #     Returns:
-    #         np.ndarray: Normalized elevation patch, or None
-    #     """
-    #     try:
-    #         row, col = rowcol(self.transform, lon, lat)
-    #         half = patch_size // 2
+        Args:
+            - lat: current latitude
+            - lon: current longitude
 
-    #         # Extract patch
-    #         r_start = max(0, row - half)
-    #         r_end = min(self.shape[0], row + half + 1)
-    #         c_start = max(0, col - half)
-    #         c_end = min(self.shape[1], col + half + 1)
+        Return:
+            - the 2d np array consists of normalised patch data
+        """
+        # GPS coordinates -> pixels (row, col)
+        pixel_row, pixel_col = rowcol(self.transform, lon, lat)
+        half = patch_size // 2
 
-    #         patch = self.data[r_start:r_end, c_start:c_end]
+        row_start = max(0, pixel_row - half)
+        row_end = min(self.shape[0], pixel_row + half + 1)
 
-    #         # Normalize (zero mean, unit variance)
-    #         patch = patch.astype(float)
-    #         patch = (patch - patch.mean()) / (patch.std() + 1e-6)
+        col_start = max(0, pixel_col - half)
+        col_end = min(self.shape[1], pixel_col + half + 1)
 
-    #         return patch
-    #     except Exception:
-    #         return None
+        # still check for eror nontheless
+        if row_start < 0 or row_end > self.shape[0] or col_start < 0 or col_end > self.shape[1]:
+            return None  # Out of bounds!
 
-    def lat_lon_to_pixel(self, lat, lon):
+        # generate patch by slicing: a numpy 2d array [[...], [...]]
+        patch = self.data[row_start:row_end, col_start:col_end] # as of dem, slicing adds the elevation automatically
+
+        # normalise the data (z-score normalisation):
+        patch = self._normalised_patch(patch)
+
+        return patch
+
+
+    def _normalised_patch(self, patch: np.ndarray) -> np.ndarray[float]:
+        patch.astype(float)
+        mean = np.mean(patch)
+        std_dev = np.std(patch)
+
+        # normalised and add Epsilon (prevent division-by-zero, especially with a perfectly flat patch)
+        normalised_patch = (patch - mean) / (std_dev + 1e-6) # 1e-6, too small to affect data, but prevent division error
+        return normalised_patch
+
+
+    def lat_lon_to_pixel(self, lat: float, lon: float):
         """Convert GPS to pixel coordinates."""
         return rowcol(self.transform, lon, lat)
+
 
     def pixel_to_lat_lon(self, row, col):
         """Convert pixel to GPS coordinates."""
         lon, lat = xy(self.transform, row, col)
         return lat, lon
+
 
     def close(self):
         """Cleanup (data already loaded, but keeps interface consistent)."""
@@ -143,12 +161,12 @@ if __name__ == "__main__":
     dem_downsampled = dem_data[::downsample_size, ::downsample_size]
 
     # Print console
-    print(f"\n📊 Visualization Info:\n")
-    print(f"  Original shape: {dem_data.shape} | Total pixel: {dem_data.size:,})") # show shape and total pixels
-    print(f"  Downsampled shae: {dem_downsampled.shape} | Total pixel: {dem_downsampled.size:,}")
+    print(f"\n  Visualization Info:\n")
+    print(f"  Original shape: {dem_data.shape} | Total pixels: {dem_data.size:,}") # show shape and total pixels
+    print(f"  Downsampled shae: {dem_downsampled.shape} | Total pixels: {dem_downsampled.size:,}")
     print(f"  Reduction by: {dem_data.size / dem_downsampled.size:.0f}x")
 
-    # AI generated sections about custom colour sgements: (im so bad at colour and art...) 
+    # AI generated sections about custom colour sgements: (im so bad at colour and art...)
     # green -> yellow -> brown -> white
     colors = ['#2d5016', '#5a8c2b', '#8fb359', '#d4c77e', '#a67c52', '#ffffff']
     n_bins = 100
@@ -175,3 +193,4 @@ if __name__ == "__main__":
     plt.tight_layout()
     print('\nPlot generating')
     plt.show()
+
