@@ -14,8 +14,7 @@ class CoordinateSystem:
 
     def latlong_to_xy(self, lat: float, lon: float) -> Tuple[float, float]:
         """
-
-
+        Convert lat/lon coordinates to x,y coordinates.
         """
 
         delta_lat = lat - self.origin_lat
@@ -23,7 +22,7 @@ class CoordinateSystem:
 
         y = delta_lat * 111320
 
-        x = delta_lon * 111320 * math.cos(math.radians(self.origin_lat))
+        x = delta_lon * 111320 * math.cos(math.radians(self.origin_lat)) # Earth curvature correction factor
 
         return x, y
 
@@ -76,3 +75,8 @@ class CoordinateSystem:
         bearing = (math.degrees(math.atan2(x, y)) + 360) % 360 # normalising the degree (prevent negative)
 
         return bearing
+
+    if __name__ == '__main__':
+        from coordinates import CoordinateSystem
+        pass
+

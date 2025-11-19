@@ -10,3 +10,4 @@ class TERCOMSensor:
     """
 
     def __init__(self):
+        pass

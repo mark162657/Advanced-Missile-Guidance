@@ -57,5 +57,5 @@ with rasterio.open(output_path, "w", **out_meta) as dest:
 for ds in datasets:
     ds.close()
 
-print(f"✓ Merged DEM saved: {output_path}")
+print(f"  Merged DEM saved: {output_path}")
 print(f"  Shape: {merged_array.shape[1]} x {merged_array.shape[2]}")

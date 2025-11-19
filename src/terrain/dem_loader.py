@@ -1,4 +1,3 @@
-# src/terrain/dem_loader.py
 import numpy as np
 import matplotlib.pyplot as plt
 import rasterio
@@ -86,7 +85,7 @@ class DEMLoader:
         col_start = max(0, pixel_col - half)
         col_end = min(self.shape[1], pixel_col + half + 1)
 
-        # still check for eror nontheless
+        # still check for error nonetheless
         if row_start < 0 or row_end > self.shape[0] or col_start < 0 or col_end > self.shape[1]:
             return None  # Out of bounds!
 
@@ -141,6 +140,13 @@ if __name__ == "__main__":
     # Test the lat/lon to elevation query, should be in range
     lat, lon = 56.0, 95.0
     elev = dem.get_elevation(lat, lon)
+
+    elev1 = dem.get_elevation(55.5, 92.3)
+    elev2 = dem.get_elevation(58.2, 97.7)
+
+    print(f"Elevation at 55.5, 92.3 is {elev1}")
+    print(f"Elevation at 58.2, 97.7 is {elev2}")
+    
     if elev:
         print(f"  Elevation at ({lat}, {lon}): {elev:.2f}m")
     else:
@@ -193,4 +199,5 @@ if __name__ == "__main__":
     plt.tight_layout()
     print('\nPlot generating')
     plt.show()
+
 
