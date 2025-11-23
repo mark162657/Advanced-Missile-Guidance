@@ -170,3 +170,15 @@ class Pathfinding:
         return dist_cost + penalty
 
 
+    def pathfinding(self, start: tuple[int, int], end: tuple[int, int], heuristic_weight: float=2.5):
+        """
+
+        Note:
+            The pathfining algorithm will implement multiple approach to improve RAM usage, so device with less RAM can still execute the program.
+        Args:
+            - heuristic_weight: prevents the algorithm to look into a whole large area that causes memory leak. Default: 2.5, adjustable later.
+        """
+
+        heuristic_weight = 2.5
+
+        start_idx = start[0]
