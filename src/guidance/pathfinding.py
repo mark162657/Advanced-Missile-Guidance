@@ -209,7 +209,9 @@ class Pathfinding:
                 print("Possibly Memory Leaked! Pathfinding terminated, adjust parameter")
                 return None
             
+            current_f, current_idx = heapq.heappop(open_set)
             
+
             
 
 
