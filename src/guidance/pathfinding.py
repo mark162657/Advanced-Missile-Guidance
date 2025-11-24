@@ -1,7 +1,10 @@
+import heapq
+from multiprocessing import heap
 from ..terrain.dem_loader import DEMLoader
 import math
 from pathlib import Path
 import numpy as np
+import heapq
 
 class Pathfinding:
     """
@@ -181,4 +184,36 @@ class Pathfinding:
 
         heuristic_weight = 2.5
 
-        start_idx = start[0]
+        # Int saves more memory then Tuple(int, int), thus, we turn each row, col element into index.
+        # Index = row * num of all columns + col
+        start_idx = start[0] * self.col + start[1]
+        end_idx = end[0] * self.col + end[1]
+
+
+        # Use heapq to construct priority queue instead of PriorityQueue due to speed. (slight diff make a diff when having millions of pixels) -> min heap (i assume)
+        open_set = []
+        heapq.heappush(open_set, (0, start_idx))
+
+        came_from = {}
+        g_score = {start_idx: 0.0}
+
+
+        node_explored = 0
+        max_nodes = 5000000 # the max node (pixel) that the algorithm can search, prevent memory leak
+
+        print(f"Pathfinding: {start} -> {end} | Weight: {heuristic_weight}")
+
+        while not open_set.empty():
+            node_explored += 1
+            if node_explored > max_nodes:
+                print("Possibly Memory Leaked! Pathfinding terminated, adjust parameter")
+                return None
+            
+            
+            
+
+
+        
+        
+
+
