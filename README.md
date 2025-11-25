@@ -10,44 +10,6 @@ The project focuses on realistic simulation of missile guidance over digital ele
 
 ---
 
-## Project Structure
-
-```
-AdvancedMissileGuidanceFramework/
-├── config/               # System configuration files
-├── data/
-│   ├── dem/              # DEM tiles (raw/merged)
-│   ├── missions/         # Mission definitions
-│   └── results/          # Simulation outputs
-├── src/
-│   ├── terrain/
-│   │   ├── dem_loader.py         # DEM file loading/query
-│   │   ├── dem_merger.py         # Merge SRTM tiles
-│   │   ├── database.py           # High-level terrain abstraction
-│   │   └── coordinates.py        # Lat/lon <-> XY
-│   ├── navigation/
-│   │   ├── gps.py                # GPS sensor simulation
-│   │   ├── tercom.py             # Terrain contour matching
-│   │   └── kalman.py             # Kalman sensor fusion
-│   ├── guidance/
-│   │   ├── pathfinding.py        # A* route finding
-│   │   └── proportional_nav.py   # Guidance law
-│   ├── missile/
-│   │   ├── profile.py            # Missile specs
-│   │   └── state.py              # Missile state
-│   ├── simulation/
-│   │   └── engine.py             # Main sim loop
-│   └── visualization/
-│       ├── plotter.py            # Path visualization
-│       └── metrics.py            # Performance metrics
-├── docs/
-│   └── missile-profile.md        # Specs and references
-├── tests/
-└── README.md
-```
-
----
-
 ## Features (Initial Phase)
 
 - Load and merge real DEM (SRTM) tiles over 500-1000 km² areas
@@ -59,7 +21,7 @@ AdvancedMissileGuidanceFramework/
 - A* pathfinding over terrain with elevation constraints
 - Proportional navigation guidance toward target
 
-**Tech Stack:** Python 3.10+ | NumPy | rasterio | matplotlib | scipy
+**Tech Stack:** Python 3.10+ | NumPy | rasterio | matplotlib
 
 ---
 <!-- 

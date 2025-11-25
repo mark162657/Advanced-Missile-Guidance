@@ -9,6 +9,9 @@ import heapq
 class Pathfinding:
     """
     Using A*pathfinding algorithm to find the most ideal path that considers the horizontal and vertical movement.
+    Before acheiving HPA or RHA pathfinding which is more efficient, or even downsampling the map, the program will
+        be heavily focused on saving RAM usage and incease efficiency.
+    
     """
     def __init__(self):
         tif_path = Path(__file__).parent.parent.parent / 'data' / 'dem' / 'merged_dem_sib_N54_N59_E090_E100.tif'
@@ -41,7 +44,7 @@ class Pathfinding:
 
         print("Lookup table generated")
 
-    # *** FOR TESTING ONLY ***
+    # *** FOR TEST ONLY ***
     def get_surfcae_distance(self, loc1: tuple[float, float], loc2: tuple[float, float]) -> float:
         """
         Get the distance (ground distance, ignoring height) of two GPS points. Take into consideration of shrink of latitude shrink.
@@ -194,8 +197,10 @@ class Pathfinding:
         open_set = []
         heapq.heappush(open_set, (0, start_idx))
 
-        came_from = {}
+    
+        came_from = {} # {parent_index: child_index}
         g_score = {start_idx: 0.0}
+        curr_loc = () # Initiate as a tuple, later stores (row, col) pair indicating current pixel
 
 
         node_explored = 0
@@ -203,19 +208,35 @@ class Pathfinding:
 
         print(f"Pathfinding: {start} -> {end} | Weight: {heuristic_weight}")
 
+
         while not open_set.empty():
             node_explored += 1
             if node_explored > max_nodes:
                 print("Possibly Memory Leaked! Pathfinding terminated, adjust parameter")
                 return None
             
+            # Pop the lowest f_score (always on top of the heap)
             current_f, current_idx = heapq.heappop(open_set)
-            
 
-            
+            # Turn the index back into row, col pair 
+            curr_row, curr_col = divmod(current_idx, self.col)
+            curr_loc = (curr_row, curr_col)
 
+            if current_idx == end_idx:
+                print(f"Target acquired, path found. Total of: {node_explored} node explored")
+                self._reconstruct_path(came_from, current_idx)
+                
 
+    def _reconstruct_path(self, came_from: dict, current_index: int=0) -> list:
+        path = []
         
-        
+        while current_index in came_from:
+            path.append(divmod(current_index, self.col))
+            # The current index is set to the item, which corresponds to the parent
+            current_index = came_from[current_index]
 
+        # Add the start node
+        path.append(divmod(current_index))
 
+        # Inverse the list: [End, B, A, Start] -> [Start, A, B, End]
+        return path[::-1]
