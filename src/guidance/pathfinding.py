@@ -97,7 +97,7 @@ class Pathfinding:
         # Get vertical distance (north/south direction)
         dist_y = (row2 - row1) * self.meter_per_y
 
-        # Midrow between two locations
+        # Midrow between two locations, used for average latitude between two points, as horizontal width change with latitude, more accurate distance estimate and saves resource (not getting width for every position)
         midrow = int((row1 + row2) / 2)
         
         # Making sure the midrow does not go over bound
@@ -175,6 +175,7 @@ class Pathfinding:
 
         return dist_cost + penalty
 
+    # --- TODO: Fix variable naming inconsistency---
 
     def pathfinding(self, start: tuple[int, int], end: tuple[int, int], heuristic_weight: float=2.5):
         """
@@ -225,7 +226,31 @@ class Pathfinding:
             if current_idx == end_idx:
                 print(f"Target acquired, path found. Total of: {node_explored} node explored")
                 self._reconstruct_path(came_from, current_idx)
+            
+            # Exploring neighbors
+            for neigh_loc in self._get_neighbors(curr_col):
+                neigh_r, neigh_c = neigh_loc # each item in the list is a tuple
+                neigh_idx = neigh_r * self.col + neigh_c
+
+                # Obtain the movement cost
+                move_cost = self._get_movement_cost(curr_loc, neigh_loc)
+
+                if move_cost == float("inf"): # handle the no-data location, jump to next neighbor
+                    continue
+
+                temp_g_score = g_score[current_idx] + move_cost
+
+                if temp_g_score < g_score[neigh_idx]:
+                    came_from[neigh_idx] = current_idx
+                    g_score[neigh_idx] = temp_g_score
+                    
+                    h_score = self.heuristic(neigh_loc, end)
+                    f_score = temp_g_score + (h_score * heuristic_weight)
+
+                    heapq.heappush(open_set, (f_score, neigh_idx))
                 
+                
+
 
     def _reconstruct_path(self, came_from: dict, current_index: int=0) -> list:
         path = []

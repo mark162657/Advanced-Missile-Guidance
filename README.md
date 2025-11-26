@@ -92,6 +92,23 @@ Output plots and metrics will be saved to `data/results/`
 
 ---
 
+### Difficulties and Performance
+
+**Performance:**
+The performance can vary base don the scale of DEM provided. The source code used a merged DEM of Siberia, from 54N to 59N, 90E to 100E.
+That DEM has the resolution of 1-arc-second, which is 10 metre per pixel. Causing around 850 million pixels. The program has tried its best to eliminat RAM leak and increase efficiency, however, difficulties could be found in the scenario:
+
+- Pathfinding: which may takes a longer time and memory leak if RAM size and CPU are limited
+
+Recommendations:
+
+
+**Solution**
+
+
+
+---
+
 ## Key Components
 
 ### Terrain System (`src/terrain/`)

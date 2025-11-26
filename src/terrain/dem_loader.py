@@ -130,7 +130,9 @@ if __name__ == "__main__":
     # Set the root for the project
     project_root = script_dir.parents[1]
     # This guides where the tif file is located, for testing
-    dem_path = project_root / "data" / "dem" / "merged_dem_sib_N54_N59_E090_E100.tif"
+    siberia_dem = "merged_dem_sib_N54_N59_E090_E100.tif"
+    test_dem = "srtm_43_02.tif"
+    dem_path = project_root / "data" / "dem" / test_dem
 
     dem = DEMLoader(dem_path)
     print(f"\n  DEM loaded: {dem.path.name}")
@@ -144,8 +146,8 @@ if __name__ == "__main__":
     elev1 = dem.get_elevation(55.5, 92.3)
     elev2 = dem.get_elevation(58.2, 97.7)
 
-    print(f"Elevation at 55.5, 92.3 is {elev1}")
-    print(f"Elevation at 58.2, 97.7 is {elev2}")
+    print(f"  Elevation at 55.5, 92.3 is {elev1}")
+    print(f"  Elevation at 58.2, 97.7 is {elev2}")
     
     if elev:
         print(f"  Elevation at ({lat}, {lon}): {elev:.2f}m")
@@ -163,13 +165,13 @@ if __name__ == "__main__":
             dem_data[dem_data == nodata] = np.nan
 
     # Handle downsampling
-    downsample_size = 5
+    downsample_size = 1
     dem_downsampled = dem_data[::downsample_size, ::downsample_size]
 
     # Print console
     print(f"\n  Visualization Info:\n")
     print(f"  Original shape: {dem_data.shape} | Total pixels: {dem_data.size:,}") # show shape and total pixels
-    print(f"  Downsampled shae: {dem_downsampled.shape} | Total pixels: {dem_downsampled.size:,}")
+    print(f"  Downsampled shape: {dem_downsampled.shape} | Total pixels: {dem_downsampled.size:,}")
     print(f"  Reduction by: {dem_data.size / dem_downsampled.size:.0f}x")
 
     # green -> yellow -> brown -> white
@@ -189,7 +191,7 @@ if __name__ == "__main__":
     plt.imshow(hillshade, cmap='gray', extent=(bounds.left, bounds.right, bounds.bottom, bounds.top), alpha=0.3)
     plt.imshow(dem_downsampled, cmap=cmap_custom, aspect='auto', extent=(bounds.left, bounds.right, bounds.bottom, bounds.top), interpolation='bilinear', alpha=0.7, vmin=vmin, vmax=vmax)
     plt.colorbar(label='Elevation (meters)', fraction=0.046, pad=0.04)
-    plt.title(f'Downsampled 1:{downsample_size} DEM of Siberia', fontsize=14, fontweight='bold')
+    plt.title(f'Downsampled 1:{downsample_size} DEM', fontsize=14, fontweight='bold')
     plt.xlabel('Longitude (degrees)', fontsize=12)
     plt.ylabel('Latitude (degrees)', fontsize=12)
     plt.gca().invert_yaxis()  # having north on top (traditional map layout)
