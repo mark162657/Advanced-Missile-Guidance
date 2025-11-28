@@ -165,7 +165,7 @@ if __name__ == "__main__":
             dem_data[dem_data == nodata] = np.nan
 
     # Handle downsampling
-    downsample_size = 1
+    downsample_size = 2
     dem_downsampled = dem_data[::downsample_size, ::downsample_size]
 
     # Print console

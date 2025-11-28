@@ -155,7 +155,7 @@ class Pathfinding:
         return dist_cost + penalty
     
 
-    def pathfinding(self, start: tuple[int, int], end: tuple[int, int], heuristic_weight: float=1.1) -> None:
+    def pathfinding(self, start: tuple[int, int], end: tuple[int, int], heuristic_weight: float=1) -> None:
         """
         
         Note:
@@ -164,8 +164,9 @@ class Pathfinding:
             - 
         """
 
-        # if heuristic_weight < 1:
-        #     raise ValueError("heuristic_weight cannot be less than 1")
+        if heuristic_weight < 0:
+            raise ValueError("heuristic_weight cannot be less than 1")
+        
         # Turn start, end pixel coord tuple into int index to save memory
         start_idx = start[0] * self.col + start[1]
         end_idx = end[0] * self.col + end[1] 

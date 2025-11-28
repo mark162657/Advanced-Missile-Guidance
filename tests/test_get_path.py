@@ -14,7 +14,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.guidance.pathfinding import Pathfinding
 
-def test_pathfinding_gps(start: tuple[float, float], end: tuple[float, float], h_weight: float=1):
+def test_pathfinding_gps(start: tuple[float, float], end: tuple[float, float]):
 
     pf = Pathfinding()
     # Accept both GPS and direct pixel (row, col) coordinate
@@ -48,7 +48,7 @@ def test_pathfinding_gps(start: tuple[float, float], end: tuple[float, float], h
     print("============================================================\n")
     
     start_time = time.time()
-    pf.pathfinding(start_loc, end_loc, h_weight)
+    pf.pathfinding(start_loc, end_loc)
     end_time = time.time()
 
     time_elapsed = end_time - start_time
@@ -58,9 +58,45 @@ def test_pathfinding_gps(start: tuple[float, float], end: tuple[float, float], h
 
 if __name__ == "__main__":
 
-    start_gps = (56.0, 95.0)
-    end_gps = (56.0, 95.1604)
+    ans = input(
+        "Choose the following test length: \n"
+        "1. 10km\n"
+        "2. 50km\n"
+        "3. 100km\n"
+        "4. 500km\n"
+        "5. 1000km\n"
+    )
 
-    path = test_pathfinding_gps(start_gps, end_gps, 1)
+    distances = {
+        "1": 10,
+        "2": 50,
+        "3": 100,
+        "4": 500,
+        "5": 1000
+    }
+
+    if ans in distances:
+        km = distances[ans]
+
+        # base coordinate
+        start_gps = (56.0, 95.0)
+
+        # degrees per km at lat 56° (longitude)
+        deg_per_km_lon = 1 / (111.32 * 0.559193)  # cos(56°) = 0.559193
+
+        # compute end point (east direction)
+        end_gps = (
+            start_gps[0],
+            start_gps[1] + km * deg_per_km_lon
+        )
+
+        print("start_gps =", start_gps)
+        print("end_gps   =", end_gps)
+
+    else:
+        print("Invalid input.")
+    
+
+    path = test_pathfinding_gps(start_gps, end_gps)
 
     print(path)
