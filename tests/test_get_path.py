@@ -14,7 +14,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.guidance.pathfinding import Pathfinding
 
-def test_pathfinding_gps(start: tuple[float, float], end: tuple[float, float]):
+def test_pathfinding_gps(start: tuple[float, float], end: tuple[float, float], h_weight: float=1):
 
     pf = Pathfinding()
     # Accept both GPS and direct pixel (row, col) coordinate
@@ -48,7 +48,7 @@ def test_pathfinding_gps(start: tuple[float, float], end: tuple[float, float]):
     print("============================================================\n")
     
     start_time = time.time()
-    pf.pathfinding(start_loc, end_loc)
+    pf.pathfinding(start_loc, end_loc, h_weight)
     end_time = time.time()
 
     time_elapsed = end_time - start_time
@@ -58,12 +58,9 @@ def test_pathfinding_gps(start: tuple[float, float], end: tuple[float, float]):
 
 if __name__ == "__main__":
 
-    start_gps = (56.0, 94.0)
-    end_gps = (55.20, 95.00)
+    start_gps = (56.0, 95.0)
+    end_gps = (56.0, 95.1604)
 
-    path = test_pathfinding_gps(start_gps, end_gps)
+    path = test_pathfinding_gps(start_gps, end_gps, 1)
 
     print(path)
-    
-
-    
