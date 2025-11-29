@@ -123,6 +123,7 @@ class Pathfinding:
         if curr_elev <= -100 or neigh_elev <= -100:
             return float("inf") # cannot fly path that no data area (uncertain of the terrain)
         
+        height_penalty = neigh_elev * 0.5
 
         # Decision penalty
 
@@ -131,7 +132,7 @@ class Pathfinding:
 
         # Situation 1: downhill (go down valley, prefered, less penalty)
         if climb_height < 0:
-            return dist_cost + (climb_height * 0.5)
+            return dist_cost + (climb_height * 0.5) + height_penalty
 
         # Situation 2: uphill (hill, mountain, those requires to go up)
         gradient = climb_height / (dist_cost + 1e-6) # +1e-6 to prevent div by zero error
@@ -152,7 +153,7 @@ class Pathfinding:
             # penalty weight: high (100), the program will chose other path unless still the closest even with penalty
             penalty = climb_height * 100.0 # apply a lot of penalty to very steep 
 
-        return dist_cost + penalty
+        return dist_cost + penalty + height_penalty
     
 
     def pathfinding(self, start: tuple[int, int], end: tuple[int, int], heuristic_weight: float=1) -> None:

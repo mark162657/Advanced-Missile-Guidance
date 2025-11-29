@@ -313,8 +313,8 @@ if __name__ == "__main__":
     import argparse
     
     parser = argparse.ArgumentParser(description='3D DEM Viewer with Path Overlay')
-    parser.add_argument('--downsample', type=int, default=4, 
-                        help='Downsample factor (1=full res, 2=half, 4=quarter, etc.)')
+    parser.add_argument('--downsample', type=int, default=8, 
+                        help='Downsample factor (1=full res, 4=quarter, 8=1/8th, etc.)')
     parser.add_argument('--path', action='store_true', 
                         help='Enable pathfinding overlay')
     parser.add_argument('--start-lat', type=float, default=56.0)

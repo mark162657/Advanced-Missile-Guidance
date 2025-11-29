@@ -16,7 +16,7 @@ import rasterio
 from matplotlib.colors import LinearSegmentedColormap
 
 def visualize_path_comparison(start_gps: tuple[float, float], end_gps: tuple[float, float], 
-                               weights: list[float] = [1.0, 1.1, 1.2, 1.5, 2.0]):
+                               weights: list[float] = [1.5, 2.0]):
     """
     Run pathfinding with multiple heuristic weights and visualize all paths on the same map.
     
@@ -265,4 +265,4 @@ if __name__ == "__main__":
         end_gps = (base_lat, base_lon + 10 * deg_per_km_lon)
     
     # Run visualization with multiple weights
-    visualize_path_comparison(start_gps, end_gps, weights=[1.0, 1.5, 2.0])
+    visualize_path_comparison(start_gps, end_gps, weights=[1.5, 2.0])
