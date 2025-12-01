@@ -123,13 +123,11 @@ class Pathfinding:
         if curr_elev <= -100 or neigh_elev <= -100:
             return float("inf") # cannot fly path that no data area (uncertain of the terrain)
         
-        height_penalty = neigh_elev * 0.5
+        height_penalty = neigh_elev * 0.05
 
-        # Decision penalty
-
+        # Decision penalty (so the missile actually behaves like missile, stay as low as possible)
         climb_height = neigh_elev - curr_elev
         
-
         # Situation 1: downhill (go down valley, prefered, less penalty)
         if climb_height < 0:
             return dist_cost + (climb_height * 0.5) + height_penalty
@@ -158,7 +156,7 @@ class Pathfinding:
 
     def pathfinding(self, start: tuple[int, int], end: tuple[int, int], heuristic_weight: float=1) -> None:
         """
-        
+        A basic A* pathfinding algorithm. 
         Note:
             The pathfining algorithm will implement multiple approach to improve RAM usage, so device with less RAM can still execute the program.
         Args:
