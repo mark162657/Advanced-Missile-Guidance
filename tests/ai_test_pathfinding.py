@@ -9,7 +9,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # Import your class
-from src.guidance.pathfinding import Pathfinding
+from guidance.pathfinding import Pathfinding
 
 def pack_index(r, c, width):
     """Helper to simulate the internal index packing."""

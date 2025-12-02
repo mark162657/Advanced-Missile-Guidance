@@ -13,7 +13,7 @@ from plotly.subplots import make_subplots
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from src.guidance.pathfinding import Pathfinding
+from guidance.pathfinding import Pathfinding
 
 
 def visualize_path_3d(start_gps: tuple[float, float], end_gps: tuple[float, float], 

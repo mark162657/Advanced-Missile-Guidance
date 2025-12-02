@@ -11,7 +11,7 @@ from pathlib import Path
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.guidance.pathfinding import Pathfinding
+from guidance.pathfinding import Pathfinding
 import rasterio
 from matplotlib.colors import LinearSegmentedColormap
 

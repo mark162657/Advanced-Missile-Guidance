@@ -17,7 +17,7 @@ import plotly.graph_objects as go
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from src.guidance.pathfinding import Pathfinding
+from guidance.pathfinding import Pathfinding
 from src.terrain.dem_loader import DEMLoader
 
 
