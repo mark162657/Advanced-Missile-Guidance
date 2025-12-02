@@ -56,14 +56,18 @@ public:
 
         // Initiate g_score
         g_score[start_idx] = 0.0f;
-        std::priority_queue<Node, >
+        std::priority_queue<Node, std::vector<Node>, std::greater<Node>> open_set;
+        open_set.push({0.0f, start_idx});
 
+        long node_explored = 0;
+
+        while (!open_set.empty()) {
+
+        }
     }
 
-
-
-
 private:
+
 
 
 
