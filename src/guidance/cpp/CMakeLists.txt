@@ -30,7 +30,7 @@ pybind11_add_module(missile_backend pathfinder.cpp)
 if(MSVC)
     target_compile_options(missile_backend PRIVATE /O2 /fp:fast)
 else()
-    target_compile_options(missile_backend PRIVATE -O3 -ffast-math -march=native)
+    target_compile_options(missile_backend PRIVATE -O3 -march=native)
 endif()
 
 # Move the output file

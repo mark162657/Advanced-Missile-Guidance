@@ -12,11 +12,11 @@ from pathlib import Path
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.guidance.pathfinding_backend import Pathfinding
+from src.guidance.archived_pathfinding import A_Pathfinding
 
 def test_pathfinding_gps(start: tuple[float, float], end: tuple[float, float]):
 
-    pf = Pathfinding()
+    pf = A_Pathfinding()
     # Accept both GPS and direct pixel (row, col) coordinate
 
     start_row, start_col = pf.dem_loader.lat_lon_to_pixel(start[0], start[1])
@@ -32,11 +32,11 @@ def test_pathfinding_gps(start: tuple[float, float], end: tuple[float, float]):
     print("============================================================")
     
     # Check if coordinates are within bounds
-    if not (0 <= start_row < pf.rows and 0 <= start_col < pf.cols):
+    if not (0 <= start_row < pf.row and 0 <= start_col < pf.col):
         print(f"\n! ERROR: Start coordinate out of bounds!")
         return None
     
-    if not (0 <= end_row < pf.rows and 0 <= end_col < pf.cols):
+    if not (0 <= end_row < pf.row and 0 <= end_col < pf.col):
         print(f"\n! ERROR: End coordinate out of bounds!")
         return None
     
@@ -48,13 +48,13 @@ def test_pathfinding_gps(start: tuple[float, float], end: tuple[float, float]):
     print("============================================================\n")
     
     start_time = time.time()
-    path = pf.find_path(start_loc, end_loc, heuristic_weight=1)
+    pf.pathfinding(start_loc, end_loc)
     end_time = time.time()
 
     time_elapsed = end_time - start_time
 
     print(f"\nExecution Time: {time_elapsed:.3f} seconds")
-    return path
+
 
 if __name__ == "__main__":
 
@@ -92,7 +92,11 @@ if __name__ == "__main__":
 
         print("start_gps =", start_gps)
         print("end_gps   =", end_gps)
-        test_pathfinding_gps(start_gps, end_gps)
+
     else:
         print("Invalid input.")
     
+
+    path = test_pathfinding_gps(start_gps, end_gps)
+
+    print(path)

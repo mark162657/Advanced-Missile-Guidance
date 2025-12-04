@@ -32,9 +32,9 @@ public:
     PathfinderCPP(
         py::array_t<float> dem_array, // float: float32
         py::array_t<double> lat_lookup_table, // double: float64
+        double meter_per_z,
         int rows,
-        int cols,
-        double meter_per_z)
+        int cols) // order matters!!
         : m_rows(rows), m_cols(cols), m_meter_per_z(meter_per_z) {
         auto buffer_dem = dem_array.request();
         auto buffer_lat = lat_lookup_table.request();
