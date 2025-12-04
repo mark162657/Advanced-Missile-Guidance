@@ -1,9 +1,13 @@
 #include <iostream>
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 #include <vector>
 #include<queue>
 #include<cmath>
+#include<algorithm>
+#include<limits>
+
 
 namespace py = pybind11;
 
@@ -20,26 +24,28 @@ struct Node {
 };
 
 
-class PathFinderCPP {
+class PathfinderCPP {
+
+// Constructors and main A* Pathfinding Algorithm
 public:
     // Constructor: accepting numpy array and var from Python
-    PathFinderCPP(
+    PathfinderCPP(
         py::array_t<float> dem_array, // float: float32
-        py::array<double> lat_lookup_table, // double: float64
+        py::array_t<double> lat_lookup_table, // double: float64
         int rows,
         int cols,
         double meter_per_z)
         : m_rows(rows), m_cols(cols), m_meter_per_z(meter_per_z) {
-            auto buff_dem = dem_array.request();
-            auto buff_lat = lat_lookup_table.request();
+        auto buffer_dem = dem_array.request();
+        auto buffer_lat = lat_lookup_table.request();
 
-            // Pointer for raw access
-            ptr_dem = static_cast<float*>(buffer_dem.ptr);
-            ptr_lat_lookup = static_cast<double*>(buffer_lat.ptr);
+        // Pointer for raw access
+        ptr_dem = static_cast<float*>(buffer_dem.ptr);
+        ptr_lat_lookup = static_cast<double*>(buffer_lat.ptr);
 
-            m_total_pixels = m_rows * m_cols;
-            std::cout << "C++ Engine Online. Map Size: " << m_rows << "x" << m_cols
-                << " (" << m_total_pixels << " pixels)" << std::endl;
+        m_total_pixels = m_rows * m_cols;
+        std::cout << "C++ Engine Online. Map Size: " << m_rows << "x" << m_cols
+            << " (" << m_total_pixels << " pixels)" << std::endl;
     }
     // --- Main A* Pathfinding Algorithm ---
     // std::pair in std::vector == storing tuple() in py list
@@ -49,6 +55,11 @@ public:
             std::cerr << "[C++] Error: Start or End index out of bounds!" << std::endl;
             return {};
         }
+
+        if (heuristic_weight < 0) {
+            std::cout << "heuristic_weight cannot be less than 1" << std::endl;
+        }
+
         // Allocating dense memory for our arrays
         std::vector<float> g_score(m_total_pixels, std::numeric_limits<float>::infinity());
         std::vector<int> came_from(m_total_pixels, -1); // fill the array with -1 (None, Null...) first
@@ -61,13 +72,64 @@ public:
         long node_explored = 0;
 
         while (!open_set.empty()) {
+            node_explored += 1;
+            Node current = open_set.top();
+            open_set.pop();
 
+            int curr_idx = current.index; // access the index from current Node
+
+            // Check if target reached by pathfinder
+            if (curr_idx == end_idx) {
+                std::cout << "Target acquired... Total of " << node_explored << " nodes explored." << std::endl;
+                return reconstruct_path(came_from, end_idx);
+            }
+
+            // Getting row, col from index for the thousand time
+            int row = curr_idx / m_cols;
+            int col = curr_idx % m_cols;
+
+            // Search neighbouring pixels (directions)
+            const int direct_r[] = {-1, 1, 0, 0, -1, -1, 1, 1};
+            const int direct_c[] = {0, 0, -1, 1, -1, 1, -1, 1};
+
+            for (int i = 0; i < 8; ++i) {
+                // update row, col pixel value for each direction
+                int new_row = row + direct_r[i];
+                int new_col = col + direct_c[i];
+                // Check boundaries
+                if (new_row >= 0 && new_row < m_rows && new_col >= 0 && new_col < m_cols) {
+                    int neigh_idx = new_row * m_cols + new_col;
+
+                    // obtain movement cost
+                    float move_cost = get_movement_cost(curr_idx, neigh_idx);
+                    if (move_cost == std::numeric_limits<float>::infinity()) continue;
+
+                    // establish g_score
+                    float temp_g_score = g_score[curr_idx] + move_cost;
+
+                    // Discover better path and update to open_set for each neighbor
+                    if (temp_g_score < g_score[neigh_idx]) {
+                        came_from[neigh_idx] = curr_idx;
+                        g_score[neigh_idx] = temp_g_score;
+
+                        // get f_score (find h_score first)
+                        float h_score = heuristic(neigh_idx, end_idx);
+                        float f_score = temp_g_score + (h_score * heuristic_weight);
+
+                        open_set.push({f_score, neigh_idx});
+
+                    }
+                }
+            }
         }
+        std::cout << "[C++] Queue exhausted, no path found..." << std::endl;
+        return {}; // return None
     }
 
+// Helper Functions
 private:
     float* ptr_dem;
-    double* ptr_lat_lookup_table;
+    double* ptr_lat_lookup;
 
     double m_meter_per_z;
     int m_rows;
@@ -82,7 +144,7 @@ private:
 
         float dist_z = std::abs(row2 - row1) * m_meter_per_z;
         int midrow = (row1 + row2) / 2;
-        double dist_x = std::abs(col2 - col1) * ptr_lat_lookup_table[midrow];
+        double dist_x = std::abs(col2 - col1) * ptr_lat_lookup[midrow];
 
         return (float) std::sqrt(dist_x * dist_x + dist_z * dist_z);
     }
@@ -102,7 +164,7 @@ private:
         int row2 = neighbor_idx / m_cols; int col2 = neighbor_idx % m_cols;
 
         double dist_z = std::abs(row2 - row1) * m_meter_per_z;
-        double dist_x = std::abs(col2 - col1) * ptr_lat_lookup_table[row1];
+        double dist_x = std::abs(col2 - col1) * ptr_lat_lookup[row1];
         float dist_cost = std::sqrt((dist_x * dist_x) + (dist_z * dist_z));
 
         // !! Crucial !! Apply extra serious penalty on altitude change, otherwise the algorithm will still choose
@@ -139,7 +201,7 @@ private:
     }
 
     // --- _reconstruct_path ---
-    std::vector<std::pair<int, int>> reconstruct_path(const std::vector<int> $came_from, int current_idx=0) {
+    std::vector<std::pair<int, int>> reconstruct_path(const std::vector<int>& came_from, int current_idx=0) {
         std::vector<std::pair<int, int>> path;
 
         while (current_idx != -1) {
@@ -148,12 +210,15 @@ private:
 
             path.push_back({row, col});
 
+            current_idx = came_from[current_idx];
         }
         std::reverse(path.begin(), path.end());
         return path;
-
     }
-
 };
-int main() {
+
+PYBIND11_MODULE(missile_backend, m) {
+    py::class_<PathfinderCPP>(m, "PathfinderCPP")
+        .def(py::init<py::array_t<float>, py::array_t<double>, double, int, int>())
+        .def("find_path", &PathfinderCPP::find_path);
 }
