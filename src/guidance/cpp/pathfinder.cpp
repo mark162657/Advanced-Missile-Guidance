@@ -70,7 +70,8 @@ public:
         open_set.push({0.0f, start_idx});
 
         long node_explored = 0;
-
+        
+        // Main pathfinding loop
         while (!open_set.empty()) {
             node_explored += 1;
             Node current = open_set.top();
@@ -170,7 +171,7 @@ private:
         // !! Crucial !! Apply extra serious penalty on altitude change, otherwise the algorithm will still choose
         // short distance vs low-altitude terrain
         // Note: This is also the part which results in the significant increase in compile time (at least in Python)
-        double height_penalty = neighbor_elev * 0.5;
+        double height_penalty = neighbor_elev * 0.8;
 
         // --- Handle: decision penalties ---
         float climb = neighbor_elev - current_elev;
@@ -203,7 +204,7 @@ private:
     // --- _reconstruct_path ---
     std::vector<std::pair<int, int>> reconstruct_path(const std::vector<int>& came_from, int current_idx=0) {
         std::vector<std::pair<int, int>> path;
-
+        
         while (current_idx != -1) {
             int row = current_idx / m_cols;
             int col = current_idx % m_cols;
@@ -212,13 +213,16 @@ private:
 
             current_idx = came_from[current_idx];
         }
+
+        // Reverse: end -> start to start -> end nodes
         std::reverse(path.begin(), path.end());
         return path;
     }
 };
 
-PYBIND11_MODULE(missile_backend, m) {
+// Module definition
+PYBIND11_MODULE(missile_backend, m) { // (module name, handle)
     py::class_<PathfinderCPP>(m, "PathfinderCPP")
-        .def(py::init<py::array_t<float>, py::array_t<double>, double, int, int>())
-        .def("find_path", &PathfinderCPP::find_path);
+        .def(py::init<py::array_t<float>, py::array_t<double>, double, int, int>()) // exposing constructors 
+        .def("find_path", &PathfinderCPP::find_path); // exposes the find_path method to python
 }

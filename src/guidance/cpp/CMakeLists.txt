@@ -33,9 +33,9 @@ else()
     target_compile_options(missile_backend PRIVATE -O3 -march=native)
 endif()
 
-# Move the output file
+# Move the output file to src/guidance/ for Python import
 add_custom_command(TARGET missile_backend POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         $<TARGET_FILE:missile_backend>
-        ${CMAKE_CURRENT_SOURCE_DIR}/../../
+        ${CMAKE_CURRENT_SOURCE_DIR}/../
 )
