@@ -44,7 +44,9 @@ class MissileProfile:
         Return:
             - turning radius (m): prevent km / m unit confusion
         """
-
+        if abs(turn_rate) < 1e-6: # prevent divide by 0 error, take into consideration of float point error
+            return float("inf")
+        
         return speed / turn_rate
 
     def get_max_lateral_acceleration(self) -> float:
@@ -68,6 +70,10 @@ class MissileProfile:
         # Check and compute acceleration for speed change
         acceleration_required = abs(desired_speed - current_speed)
         if acceleration_required > self.max_acceleration:
+            return False
+
+        # Check if turn rate is greater than evasive turn rate
+        if turn_rate > self.evasive_turn_rate:
             return False
 
         # Compute lateral acceleration

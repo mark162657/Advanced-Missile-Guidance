@@ -68,7 +68,7 @@ class MissileState:
         """
         return np.array([self.vx, self.vy, self.vz])
 
-    def apply_command(self, dt: float, acceleration: np.ndarray, heading_rate: float) -> bool:
+    def update_physics(self, dt: float, acceleration: np.ndarray, heading_rate: float) -> bool:
         """
         Update the missile state.
 
@@ -78,9 +78,6 @@ class MissileState:
             - heading_rate: heading change rate (rad/s)
 
         """
-        if not MissileProfile.vlaidate_maneuver(self.get_speed(), self.get_speed() + np.linalg.norm(acceleration) * dt,
-                                                heading_rate):
-            return False
 
         # Velocity by formula: v_t = v_0 + a * t
         # new velocity equals the current velocity + acceleration * time
@@ -94,17 +91,17 @@ class MissileState:
         self.z += self.vz * dt
 
         # Heading
-        self.heading += heading_rate * dt % (2 * math.pi)
+        self.heading += (heading_rate * dt)
+        self.heading %= (2 * math.pi)
 
         # Time
         self.time += dt
 
         # Distance travelled
-        self.distance_traveled += np.sqrt(self.vx ** 2 + self.vy ** 2 + self.vz ** 2) * dt
+        self.distance_traveled += self.get_speed() * dt
 
-        return True
+        self.altitude = self.y
 
-
-
-
+    def sync_geography(self) -> None:
+        pass
 
