@@ -209,7 +209,7 @@ private:
         // !! Crucial !! Apply extra serious penalty on altitude change, otherwise the algorithm will still choose
         // short distance vs low-altitude terrain
         // Note: This is also the part which results in the significant increase in compile time (at least in Python)
-        double height_penalty = neighbor_elev * 0.5;
+        double height_penalty = neighbor_elev * 0.8;
 
         // --- Handle: decision penalties ---
         float climb = neighbor_elev - current_elev;
