@@ -100,8 +100,5 @@ class MissileState:
         # Distance travelled
         self.distance_traveled += self.get_speed() * dt
 
+        # z-up: z represents altitude, matching that in the pathfinding and trajectory.py
         self.altitude = self.z
-
-    def sync_geography(self) -> None:
-        pass
-
