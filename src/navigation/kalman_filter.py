@@ -63,6 +63,10 @@ class KalmanFilter:
 
     
     def predict(self, acc_input: List[float]) -> None:
+        """
+        Arg:
+            acc_input: list[x, y, z]
+        """
         u = np.array(acc_input)
 
         # Predictive state x = Ax + Bu:

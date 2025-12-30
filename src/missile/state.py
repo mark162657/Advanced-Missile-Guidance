@@ -100,7 +100,7 @@ class MissileState:
         # Distance travelled
         self.distance_traveled += self.get_speed() * dt
 
-        self.altitude = self.y
+        self.altitude = self.z
 
     def sync_geography(self) -> None:
         pass

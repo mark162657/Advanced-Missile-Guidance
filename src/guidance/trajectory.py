@@ -14,7 +14,7 @@ class TrajectoryGenerator:
         """
         Smooth the path by B Spline (C2 continuity), which is aerodynamic and close to what missile could fly.
         Balancing continuity and local control.
-        We ignore altitude (y will be handled by missile itself), we focus on x, z, making it still a 2d path.
+        We ignore altitude during 2D smoothing (z will be handled by missile itself/terrain lookup), we focus on x, y (lat/lon).
         """
 
         # check length
