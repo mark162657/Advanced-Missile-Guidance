@@ -21,7 +21,11 @@ except ImportError as e:
 
 # Main class that main file will call
 class Pathfinding:
-    def __init__(self, dem_name):
+    def __init__(self, dem_name: str) -> None:
+        """
+        Args:
+            - dem_name: the name of the DEM file
+        """
         
         # Load dem, requesting dem file name:
         tif_path = Path(__file__).parent.parent.parent / 'data' / 'dem' / f'{dem_name}'
@@ -76,12 +80,13 @@ class Pathfinding:
 
     def find_path(self, start: tuple[int, int], end: tuple[int, int], heuristic_weight: float=2) -> list:
         """
-        Main interface to run the A* algorithm, serve as a caller for reciving info and calling the C++ engine.
+        Main interface to run the A* algorithm, serve as a caller for receiving info and calling the C++ engine.
         Args:
             - start: (row, col) tuple pair for pixel
             - end: (row, col) tuple pair for pixel
-            - heuristic_weight: multiplies the heuristic cost; set to 2.0 for faster, directed searches or 1.0 for the guaranteed shortest path (currently no difference lol).
-                The higher the heuristic_weight, potentially the compile time increases.
+            - heuristic_weight: multiplies the heuristic cost; set to 2.0 for faster, directed searches or 1.0 for
+            the guaranteed shortest path (currently no difference lol).
+            The higher the heuristic_weight, potentially, the compile time increases.
         """
 
         if not self.engine:

@@ -1,7 +1,7 @@
 import numpy as np
 
 class KalmanFilter:
-    def __init__(self, dt: float, init_position: List[float], init_velocity: Optional[List[float]], process_noise_std: float, std_mea: float=0.05) -> None:
+    def __init__(self, dt: float, init_position: list[float], init_velocity: list[float], process_noise_std: float, std_mea: float=0.05) -> None:
 
         # Sampling time
         self.dt = dt
@@ -62,7 +62,7 @@ class KalmanFilter:
         self.P = np.eye(6) * 100 # * 100 as we assume 100m drift, can be adjusted accordingly
 
     
-    def predict(self, acc_input: List[float]) -> None:
+    def predict(self, acc_input: list[float]) -> None:
         """
         Arg:
             acc_input: list[x, y, z]
@@ -75,9 +75,9 @@ class KalmanFilter:
         # Predicted process covariance matrix P = AP * A.T + Q: 
         self.P = (self.A @ self.P @ self.A.T) + self.Q
 
-    def update(self, measurement: List[float], sensor_type="GPS": str) -> None:
+    def update(self, measurement: list[float], sensor_type: str="GPS") -> None:
         # Set the R matrix to different value based on sensor_type
-        if sensor_type = "TERCOM":
+        if sensor_type == "TERCOM":
             R_current = self.R_TERCOM
         else:
             R_current = self.R_GPS
@@ -98,5 +98,5 @@ class KalmanFilter:
         I = np.eye(6)
         self.P = (I - (KG @ self.H)) @ self.P
 
-    def get_state(self) -> Tuple[np.ndarray, np.ndarray]:
+    def get_state(self) -> tuple[np.ndarray, np.ndarray]:
         return self.x[:3], self.x[3:]
