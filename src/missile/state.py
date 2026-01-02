@@ -37,7 +37,6 @@ class MissileState:
     lat: float
     altitude: float
 
-
     # time tracking
     time: float
 

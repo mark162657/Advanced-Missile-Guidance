@@ -6,13 +6,12 @@ class MissileProfile:
     Unit:
         speed: m/s
         distance: m
-        altitude: m
+        altitude: m (AGL)
         acceleration: m/s^2
         time: second
         angle: radian
         turn rate: radian/second
         mass: kg
-        force: N
     """
     cruise_speed: float
     min_speed: float
@@ -29,8 +28,7 @@ class MissileProfile:
 
     # evasive jink (high-g evasion)
     evasive_turn_rate: float
-    evasive_g_force: float
-
+    # evasive_g_force will be max_g_force
 
 
     def calculate_turning_radius(self, speed: float, turn_rate: float) -> float:
