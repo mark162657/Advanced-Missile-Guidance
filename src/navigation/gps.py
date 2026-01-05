@@ -26,7 +26,13 @@ class GPS:
         Args:
             - current_position: (row, col) tuple
         """
-        self.dem_loader.pixel_to_lat_lon()
+        curr_lat, curr_lon = self.dem_loader.pixel_to_lat_lon(current_position[0], current_position[1])
+        position = [curr_lat, curr_lon]
+
+
+
+
+
 
     def is_ready(self, current_time):
         pass

@@ -1,4 +1,4 @@
-# AI generated, human-verified
+# src/visualization/plotter.py
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -24,7 +24,7 @@ class MissionPlotter:
     @staticmethod
     def plot_mission(history: dict, planned_path: list = None,
                      dem_file: str = None, origin: tuple = None,
-                     title: str = "Mission Analysis"):
+                     title: str = "Mission Analysis", downsample: int = 2):
         """
         Generates mission summary plots with optional terrain background.
 
@@ -35,6 +35,7 @@ class MissionPlotter:
             dem_file (str): Filename of the .tif file in 'data/dem/' (e.g., "srtm_43_02.tif").
             origin (tuple): (Latitude, Longitude) of the (0,0) point in the simulation.
                             Required if dem_file is provided.
+            downsample (int): Factor to reduce DEM resolution for faster plotting (default: 2).
         """
 
         # 1. Data Preparation
@@ -76,7 +77,7 @@ class MissionPlotter:
 
         # --- PLOT A: Ground Track (Top-Down) ---
         ax_top = fig.add_subplot(gs[0:2, 0])
-        ax_top.set_title("Ground Track (Zoomed)")
+        ax_top.set_title(f"Ground Track (Zoomed, Downsample={downsample})")
         ax_top.set_xlabel("East (X) [m]")
         ax_top.set_ylabel("North (Y) [m]")
 
@@ -84,21 +85,16 @@ class MissionPlotter:
         if dem_file and origin and DEMLoader:
             try:
                 # Construct Path: PROJECT_ROOT/data/dem/FILENAME
-                # We assume plotter.py is in src/visualization/ or root/src/...
-                # Adjust parents count based on actual file location.
-                # Here assuming: root/src/visualization/plotter.py -> parents[2] is root
                 project_root = Path(__file__).resolve().parents[2]
                 dem_path = project_root / "data" / "dem" / dem_file
 
                 if not dem_path.exists():
-                    # Fallback: try relative to current working directory
                     dem_path = Path("data/dem") / dem_file
 
                 if dem_path.exists():
                     dem = DEMLoader(dem_path)
 
                     # 1. Inverse Project: Meter Bounds -> Lat/Lon Bounds
-                    # Using the logic from coordinates.py: y = delta_lat * 111320
                     origin_lat, origin_lon = origin
                     meters_per_lat = 111320.0
                     meters_per_lon = 111320.0 * math.cos(math.radians(origin_lat))
@@ -116,26 +112,26 @@ class MissionPlotter:
                     r_min, c_min = dem.lat_lon_to_pixel(lat_max, lon_min)  # Top-Left
                     r_max, c_max = dem.lat_lon_to_pixel(lat_min, lon_max)  # Bottom-Right
 
-                    # Handle indices order (r_min should be smaller than r_max)
+                    # Handle indices order
                     r_start, r_end = min(r_min, r_max), max(r_min, r_max)
                     c_start, c_end = min(c_min, c_max), max(c_min, c_max)
 
-                    # 3. Slice DEM (with bounds check)
-                    # Add small buffer to ensure we cover the plot
-                    buffer = 2
+                    # 3. Slice DEM with Downsampling
+                    buffer = 2 * downsample
                     r_start = max(0, r_start - buffer)
                     r_end = min(dem.shape[0], r_end + buffer)
                     c_start = max(0, c_start - buffer)
                     c_end = min(dem.shape[1], c_end + buffer)
 
                     if r_end > r_start and c_end > c_start:
-                        dem_patch = dem.data[r_start:r_end, c_start:c_end].astype(float)
+                        # APPLY DOWNSAMPLING HERE
+                        dem_patch = dem.data[r_start:r_end:downsample, c_start:c_end:downsample].astype(float)
 
                         # Handle NoData
                         dem_patch[dem_patch == dem.nodata] = np.nan
 
                         # 4. Calculate Exact Extent for imshow (in Meters)
-                        # We must map the pixel corners back to meters to align perfectly
+                        # We use the original corner pixels to determine the geographic extent
                         patch_lat_top, patch_lon_left = dem.pixel_to_lat_lon(r_start, c_start)
                         patch_lat_bottom, patch_lon_right = dem.pixel_to_lat_lon(r_end, c_end)
 
@@ -161,10 +157,10 @@ class MissionPlotter:
                                       extent=[img_min_x, img_max_x, img_min_y, img_max_y],
                                       origin='upper', alpha=0.6)
 
-                        print(f"[Plotter] Loaded terrain patch: {dem_patch.shape}")
+                        print(f"      [Plotter] Terrain loaded (Downsample={downsample}). Shape: {dem_patch.shape}")
 
             except Exception as e:
-                print(f"[Plotter] Failed to load DEM background: {e}")
+                print(f"      [Plotter] Failed to load DEM background: {e}")
         # ================================
 
         # Plot Planned Path
@@ -212,14 +208,10 @@ class MissionPlotter:
         ax_3d.set_title("3D Trajectory")
         ax_3d.plot(true_pos[:, 0], true_pos[:, 1], true_pos[:, 2], 'b-', label="True")
         ax_3d.plot(est_pos[:, 0], est_pos[:, 1], est_pos[:, 2], 'r--', label="Est")
-        ax_3d.plot(true_pos[:, 0], true_pos[:, 1], min(true_pos[:, 2].min(), 0), 'gray', alpha=0.2)
-        ax_3d.set_box_aspect((span_x, span_y, max(true_pos[:, 2]) - min(true_pos[:, 2]) + 10))
+        # Ground plane reference (min Z)
+        z_floor = min(true_pos[:, 2].min(), 0)
+        ax_3d.plot(true_pos[:, 0], true_pos[:, 1], z_floor, 'gray', alpha=0.2)
+        ax_3d.set_box_aspect((span_x, span_y, max(true_pos[:, 2]) - z_floor + 10))
 
         plt.tight_layout()
         plt.show()
-
-
-if __name__ == "__main__":
-    # Dummy test
-    print("Plotter test running...")
-    # Add dummy history dict here if running directly
