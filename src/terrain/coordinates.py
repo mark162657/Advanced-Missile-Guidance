@@ -113,7 +113,7 @@ class CoordinateSystem:
         """
         return math.atan2(east_to - east_from, north_to - north_from)
 
-    def get_heading(self, lat1: float, long1: float, lat2: float, long2: float) -> float:
+    def get_heading(self, lat1: float, long1: float, lat2: float, long2: float) -> float:gi
         """Initial bearing from point 1 to point 2, degrees clockwise from north."""
 
         # convert lat1, lon1, lat2, lon2 into radian
