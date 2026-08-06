@@ -1,103 +1,187 @@
 # Web Control Terminal
 
-A browser-based mission-control frontend for the missile-guidance simulator. Three
-workspaces — **Planning**, **Mission Control**, and **Final Report** — over a widget
-dashboard with dark/light themes, a self-contained tactical map, and a lightweight
-line-art 3D viewer.
+A browser-based mission-control frontend for the missile-guidance simulator. It
+provides Planning, Mission Control, and Final Report workspaces with a tactical
+map, lightweight 3D viewer, telemetry instruments, replay, and live simulation.
 
-## Running
+The browser UI is plain ES-module JavaScript and CSS. Node.js and npm are not
+required.
 
-The web server uses **FastAPI + uvicorn**; the simulation stack it bridges to needs
-the parent project's dependencies (numpy, rasterio, scipy) and — for *live* planning
-and simulation — the C++ pathfinder built under `src/missile/planning/cpp/`.
+## Prerequisites
 
-```bash
-# from the project root, with the sim's deps already available on your python3
-pip install -r frontend/requirements.txt
-python3 frontend/run.py            # http://127.0.0.1:8000
-python3 frontend/run.py --reload   # dev auto-reload
+- 64-bit Python 3.10 or newer. Use the same interpreter for installation,
+  compiling the pathfinder, and launching the frontend.
+- CMake 3.15 or newer.
+- A C++14 compiler:
+  - Windows: Visual Studio Build Tools with **Desktop development with C++** and
+    a Windows SDK.
+  - macOS: Xcode Command Line Tools (`xcode-select --install`).
+  - Linux: GCC or Clang and Python development headers.
+- A GeoTIFF DEM in `data/dem/` and a missile profile in `data/missiles/`.
+
+## Python modules
+
+Installing `frontend/requirements.txt` installs every direct module needed by
+the web terminal and live simulator:
+
+- `fastapi` - HTTP and WebSocket application.
+- `pydantic` - API request validation.
+- `uvicorn[standard]` - ASGI server, reload watcher, and WebSocket support.
+- `numpy` - simulation, navigation, and terrain arrays.
+- `rasterio` - GeoTIFF DEM reading and coordinate transforms.
+- `scipy` - B-spline trajectory generation.
+- `matplotlib` - terrain colour and hillshade utilities imported by the DEM
+  loader.
+- `pybind11` - Python bindings and CMake integration for the C++ pathfinder.
+
+Their transitive packages are installed automatically. Node.js and npm are not
+part of the frontend toolchain.
+
+## Create an isolated Python environment
+
+Run these commands from the project root.
+
+### Windows PowerShell
+
+```powershell
+python --version
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -r frontend\requirements.txt
 ```
 
-Everything is served from `http://127.0.0.1:8000`. No build step — the UI is plain
-ES-module JavaScript and CSS.
+If PowerShell blocks activation, activation is optional; use
+`.\.venv\Scripts\python.exe` in place of `python` for every command below.
 
-## What each screen does
+### macOS or Linux
 
-### 1 · Planning
-Pick a DEM and a missile profile, drop **launch** and **target** points on the map
-(click, or type coordinates), tune the mission parameters, and set the **pathfinding**
-heuristic in its own separated section. *Run Pathfinding* calls the real C++ A* + B-spline
-backend and streams progress into the console; the route draws on the map. *Proceed to
-Mission* arms the plan for live flight.
+```bash
+python3 --version
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r frontend/requirements.txt
+```
 
-### 2 · Mission Control
-The live monitoring workspace: tactical **map** + third-person **3D viewer** in the
-centre, a tabbed **Navigation / Controls / Weather** monitor, a **PFD** (speed / altitude
-tapes, attitude, FPA), **deviation charts** (position/altitude error, AGL, speed), and a
-prominent **stage banner** with mission time and distance-to-target progress. Plays a
-recorded flight (replay) or drives the armed plan live over a WebSocket.
+## Build the native pathfinder
 
-### 3 · Final Report
-A **timeline scrubber** replays the whole flight — drag it and the map, 3D posture, and
-state readout all follow. Below, the **mission report** card gives the verdict, impact
-geometry, deviation stats, a 0–100 success score, and JSON / clipboard export.
+The generated module is interpreter- and platform-specific (`.pyd` on Windows,
+`.so` on macOS/Linux). Do not copy it between operating systems or Python minor
+versions; rebuild it locally.
 
-## The 3D viewer
+### Windows PowerShell
 
-Pure 2D-canvas line art (no WebGL): an orbit camera around the missile, a wireframe
-terrain patch sampled from the DEM, a line-art Tomahawk oriented by the flight state
-(heading + flight-path angle), the planned/flown trajectories with boost/terminal
-segments coloured, an AGL drop-line, and the target marker. It redraws only on demand,
-so it stays light on the CPU. **Drag** to orbit, **scroll** to zoom; the controls
-recenter on the missile or frame the whole mission.
+Make sure `cmake` is on `PATH`. A normal PowerShell terminal works when CMake
+and Visual Studio Build Tools are installed correctly; otherwise use the
+**x64 Native Tools Command Prompt for Visual Studio**.
+
+```powershell
+$pythonExe = python -c "import sys; print(sys.executable)"
+cmake -S src\missile\planning\cpp -B src\missile\planning\cpp\build "-DPython3_EXECUTABLE=$pythonExe"
+cmake --build src\missile\planning\cpp\build --config Release
+```
+
+### macOS or Linux
+
+```bash
+python_exe="$(python -c 'import sys; print(sys.executable)')"
+cmake -S src/missile/planning/cpp -B src/missile/planning/cpp/build -DPython3_EXECUTABLE="$python_exe"
+cmake --build src/missile/planning/cpp/build --config Release
+```
+
+CMake copies the compiled module into `src/missile/planning/`, where Python can
+import it. Confirm the import with:
+
+```bash
+python -c "import sys; sys.path.insert(0, 'src'); from missile.planning import missile_backend; print('pathfinder ready')"
+```
+
+## Run the frontend
+
+```bash
+python frontend/run.py             # http://127.0.0.1:8000
+python frontend/run.py --reload    # development auto-reload
+```
+
+On Windows without environment activation:
+
+```powershell
+.\.venv\Scripts\python.exe frontend\run.py
+```
+
+Everything is served from `http://127.0.0.1:8000`.
+
+## Troubleshooting
+
+### `ModuleNotFoundError`
+
+Install `frontend/requirements.txt` with the exact Python interpreter used to
+launch `frontend/run.py`. IDEs such as PyCharm may select a different interpreter
+from the terminal.
+
+### C++ pathfinding engine is unavailable
+
+Rebuild the extension with the same active Python environment. On Windows,
+include `--config Release`. Check that a `missile_backend*.pyd` or
+`missile_backend*.so` exists under `src/missile/planning/`.
+
+### CMake or compiler not found
+
+- Windows: install CMake and Visual Studio Build Tools, then open a new terminal.
+- macOS: install CMake and Xcode Command Line Tools.
+- Linux: install CMake, a compiler, and your distribution's Python development
+  package.
+
+### Planning hangs or the process runs out of memory
+
+Merged DEMs are very large. The simulator currently loads full terrain arrays
+more than once during live operation. Start with the smallest available DEM to
+validate setup, then use large tiles only on a machine with sufficient RAM.
+
+The Planning screen selects the smallest available tile initially and warns when
+a selected terrain exceeds 500 million pixels. This behaviour is identical on
+Windows, macOS, and Linux.
 
 ## Architecture
 
-```
+```text
 frontend/
-├── run.py                 launcher (uvicorn)
-├── requirements.txt
-├── backend/
-│   ├── app.py             FastAPI: REST + /ws/live
-│   ├── bootstrap.py       puts ../src on sys.path
-│   ├── dem_service.py     downsampled DEM grids + point elevation (rasterio)
-│   ├── catalog.py         profiles, recorded flights, results
-│   ├── frames.py          the unified telemetry frame (replay + live share it)
-│   ├── planning.py        real A* + spline route planning
-│   └── live_runner.py     drives Simulation.step() without the interactive prompts
-└── web/
-    ├── index.html         app shell
-    ├── css/               tokens.css (theme) + app.css (components)
-    └── js/                app · api · widgets · viewer3d · map2d · pfd · charts
-                           · player · stagebanner · planning · mission · report
+|-- run.py                 FastAPI/uvicorn launcher
+|-- requirements.txt      Complete direct Python dependencies
+|-- backend/
+|   |-- app.py             REST API and live WebSocket
+|   |-- bootstrap.py       Adds ../src to Python's import path
+|   |-- native_backend.py  Cross-platform native-module preflight
+|   |-- dem_service.py     Downsampled DEM grids and elevation queries
+|   |-- catalog.py         Profiles, recorded flights, and results
+|   |-- frames.py          Shared replay/live telemetry frame
+|   |-- planning.py        C++ A* and B-spline route planning
+|   `-- live_runner.py     Non-interactive live simulation adapter
+`-- web/
+    |-- index.html
+    |-- css/
+    `-- js/
 ```
 
-### Telemetry model
-Both the recorded-log replayer and the live simulation emit the **same frame shape**
-(`backend/frames.py`), so the UI has one schema to render. Recorded flights come from
-`data/logs/*.csv`; verdicts from `data/results/*.json`, paired by nearest timestamp.
+## API
 
-### API
 | Method | Path | Purpose |
 |---|---|---|
-| GET | `/api/dems` | DEM tiles + bounds |
-| GET | `/api/dems/{name}/grid` | downsampled elevation grid |
-| GET | `/api/dems/{name}/elevation?lat=&lon=` | point elevation |
-| GET | `/api/profiles` | missile profiles |
-| GET | `/api/missions` | recorded flight summaries |
-| GET | `/api/missions/{id}` | full telemetry + verdict |
-| GET | `/api/results` | saved verdicts |
-| POST | `/api/plan` | run A* + spline, return trajectory |
-| WS | `/ws/live` | drive the live simulation, stream frames |
+| GET | `/api/dems` | DEM tiles and bounds |
+| GET | `/api/dems/{name}/grid` | Downsampled elevation grid |
+| GET | `/api/dems/{name}/elevation?lat=&lon=` | Point elevation |
+| GET | `/api/profiles` | Missile profiles |
+| GET | `/api/missions` | Recorded-flight summaries |
+| GET | `/api/missions/{id}` | Full telemetry and verdict |
+| GET | `/api/results` | Saved verdicts |
+| POST | `/api/plan` | A* and spline route planning |
+| WS | `/ws/live` | Live simulation telemetry |
 
-## Notes & limits
+## Notes and limits
 
-- **Live planning / simulation** need the C++ pathfinder built and enough RAM to load
-  the chosen DEM (the Iran/Siberia tiles are large). Recorded-flight replay works with
-  no C++ and drives every screen, so the UI is fully usable from the shipped data.
-- The map is a **self-contained DEM hillshade** (no external tile provider), so it works
-  offline and stays visually identical across light/dark — the "map unaffected by theme"
-  requirement. A slippy-tile underlay could be layered in later if desired.
-- Recorded telemetry logs kinematic state; detailed autopilot/PID signals surface only
-  on the live stream, which the Controls tab notes.
-```
+- Recorded-flight replay does not require the native pathfinder.
+- Live planning and live simulation require the compiled native pathfinder.
+- The map hillshade is derived from the local DEM, so it works offline.
+- Recorded telemetry includes kinematic state; detailed autopilot/PID signals
+  are available only on the live stream.

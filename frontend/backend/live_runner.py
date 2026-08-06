@@ -15,6 +15,7 @@ import time
 from typing import Callable, Iterator
 
 from . import bootstrap  # noqa: F401 - puts src/ on sys.path
+from .native_backend import require_pathfinder_backend
 
 
 MAX_FLIGHT_TIME_S = 7200.0  # 2 hr hard ceiling (matches SimulationConfig default)
@@ -171,6 +172,10 @@ def iter_frames(
     mission unfold at real time (`view_factor` sim-seconds per real second). If
     the sim is too heavy to keep up, no delay is added and it simply runs slower.
     """
+    # `main.Simulation` allocates full terrain arrays during construction. Check
+    # the native binary first so a missing/incompatible build fails cheaply.
+    require_pathfinder_backend()
+
     from missile.config_store import get_profile
     from missile.profile import MissileProfile
     from missile.state import FlightStage

@@ -164,7 +164,12 @@ export class PlanningScreen {
     const dems = this.app.store.dems, profiles = this.app.store.profiles;
     setOptions(this.demSelect, dems.map((d) => ({ value: d.name, label: prettyDem(d.name) })));
     setOptions(this.profileSelect, profiles.map((p) => ({ value: p.name, label: p.name })));
-    if (dems.length && !this.state.dem) this._selectDem(dems[0].name);
+    // Start with the smallest available tile on every platform. Large merged
+    // DEMs remain selectable, but loading them fully can consume many GiB.
+    if (dems.length && !this.state.dem) {
+      const safest = dems.reduce((a, b) => demPixels(a) <= demPixels(b) ? a : b);
+      this._selectDem(safest.name);
+    }
     if (profiles.length && !this.state.profile) this._selectProfile(profiles[0].name);
   }
 
@@ -346,6 +351,13 @@ export class PlanningScreen {
     ];
     if (g) rows.push(kvRow("Elevation", `${nf(g.z_min)} – ${nf(g.z_max)} m`));
     this.demBody.append(el("div", {}, rows));
+    if (isLargeDem(m)) {
+      this.demBody.append(el("p", {
+        class: "hint is-warn",
+        style: { marginTop: "10px" },
+        text: "Large terrain tile: planning and live simulation load full DEM arrays and may require 10+ GiB RAM. Use a smaller tile for setup checks.",
+      }));
+    }
   }
 
   // --- run ------------------------------------------------------------------
@@ -449,6 +461,8 @@ function routeLength(traj) {
 function prettyDem(name) {
   return name.replace(/^merged_dem_/, "").replace(/\.tif$/, "").replace(/_/g, " ");
 }
+function demPixels(dem) { return Number(dem?.width || 0) * Number(dem?.height || 0); }
+function isLargeDem(dem) { return demPixels(dem) >= 500_000_000; }
 function field(label, control) { return el("div", { class: "field" }, [el("span", { class: "label", text: label }), control]); }
 function formGrid(fields) { return el("div", { class: "form-grid" }, fields); }
 function labeledGps(label, node) { return el("div", { class: "field" }, [el("span", { class: "label", text: label }), node]); }

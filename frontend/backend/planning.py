@@ -10,10 +10,14 @@ from __future__ import annotations
 import time
 
 from . import bootstrap  # noqa: F401 - side effect: puts src/ on sys.path
+from .native_backend import require_pathfinder_backend
 
 
 def run_plan(dem_name: str, start_gps, target_gps, heuristic_weight: float = 2.0) -> dict:
     """Plan start -> target over a DEM. Raises on failure; caller maps to HTTP."""
+    # Check the platform-specific binary before Pathfinding allocates the full DEM.
+    require_pathfinder_backend()
+
     from missile.planning.pathfinding_backend import Pathfinding
     from missile.planning.trajectory import TrajectoryGenerator
 
@@ -21,11 +25,8 @@ def run_plan(dem_name: str, start_gps, target_gps, heuristic_weight: float = 2.0
     t0 = time.time()
 
     pf = Pathfinding(dem_name)
-    if pf.engine is None:
-        raise RuntimeError(
-            "C++ pathfinding engine not built. Build src/missile/planning/cpp "
-            "(CMake) before planning live routes."
-        )
+    if pf.engine is None:  # Defensive: direct binary import above should catch this.
+        raise RuntimeError("C++ pathfinding engine failed to initialise.")
     log.append(f"[dem] {dem_name} loaded ({pf.rows}x{pf.cols} px)")
 
     start_rc = tuple(pf.dem_loader.lat_lon_to_pixel(start_gps[0], start_gps[1]))
