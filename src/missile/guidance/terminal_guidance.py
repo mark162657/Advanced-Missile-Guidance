@@ -8,7 +8,7 @@ While:
 Source:
     Ryoo, C., Cho, H., & Tahk, M. (2005). Optimal Guidance Laws with Terminal Impact Angle
         Constraint. Journal of Guidance Control and Dynamics, 28(4),
-        724–732. https://doi.org/10.2514/1.8392
+        724-732. https://doi.org/10.2514/1.8392
 """
 
 import math
@@ -76,7 +76,13 @@ class TerminalGuidance:
 
     def terminal_init_range(self) -> float:
         """
-        Eq. 41
+        Determine the range/point which is ideal for the missile to pull up and engage terminal stage.
+
+        Eq. 41 from 
+        u_min = 2V^2 * |sin theta_mf / R_0|
+        
+        Return:
+        
         """
         v_cruise = self.profile.basic.cruise_speed_ms
         accel_max = self.profile.get_max_lateral_acceleration()
@@ -87,6 +93,7 @@ class TerminalGuidance:
 
     def engage_terminal(self, state: MissileState) -> bool:
         """
+        Engage terminal when the missile has reached init_range.
         """
         return self.target.direct_3d_distance(state) <= self.init_range
 
@@ -137,6 +144,14 @@ class TerminalGuidance:
         Estimate remaining flight time until impact
         Table 1, Eq 2.
 
+        Args:
+            state: passing down state of missile
+            v_inst: the speed at the current moment
+            los: line-of-sight angle to target
+            theta_mf: impact angle
+
+        Return:
+            The crampped time_to_go
         """
         r = self.target.direct_3d_distance(state)
         theta_m = state.get_flight_path_angle()

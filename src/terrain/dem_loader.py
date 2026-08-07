@@ -103,6 +103,7 @@ class DEMLoader:
         except Exception:
             return None
 
+    # Important for DSMAC/TERCOM
     def get_elevation_patch(self, lat: float, lon: float,
                              patch_size=7, normalized=True) -> np.ndarray:
         """
