@@ -48,7 +48,6 @@ class PathFollower:
 
     def update(self, state: MissileState):
         """
-        
 
         """
         # turn the current lat/lon position to ENU
